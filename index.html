@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Auditoria da Qualidade - ISO 9001:2015</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- React & ReactDOM -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  
+  <!-- Babel Compiler -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useMemo, useEffect } = React;
+
+    // Ícones React inline usando SVG do Lucide para máxima fiabilidade
+    const IconClipboardCheck = () => (
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" class="w-full h-full"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="m9 14 2 2 4-4"/></svg>
+    );
+
+    const IconSave = () => (
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 18v-4h4v4"/><path d="M8 10h8"/></svg>
+    );
+
+    const IconPrinter = () => (
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 9V3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6"/><rect x="6" y="14" width="12" height="8" rx="1"/></svg>
+    );
+
+    const IconFilePlus = () => (
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M9 15h6"/><path d="M12 12v6"/></svg>
+    );
+
+    const IconHistory = () => (
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
+    );
+
+    const IconChevronUp = () => (
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m18 15-6-6-6 6"/></svg>
+    );
+
+    const IconChevronDown = () => (
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+    );
+
+    const IconInfo = () => (
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+    );
+
+    const initialChecklist = [
+      {
+        id: 'c4',
+        clause: '4',
+        title: 'Contexto da Organização',
+        items: [
+          { id: '4.1', text: 'A organização determinou questões externas e internas relevantes para o seu propósito e direção estratégica?', status: '', notes: '' },
+          { id: '4.2', text: 'As partes interessadas relevantes e os seus requisitos para o SGQ foram identificados e são monitorizados?', status: '', notes: '' },
+          { id: '4.3', text: 'O âmbito do Sistema de Gestão da Qualidade (SGQ) está determinado, justificado e disponível como informação documentada?', status: '', notes: '' },
+          { id: '4.4', text: 'Os processos necessários para o SGQ estão mapeados, incluindo as suas interações, entradas, saídas e indicadores de desempenho?', status: '', notes: '' }
+        ]
+      },
+      {
+        id: 'c5',
+        clause: '5',
+        title: 'Liderança',
+        items: [
+          { id: '5.1', text: 'A gestão de topo demonstra liderança e compromisso em relação ao SGQ e foco no cliente?', status: '', notes: '' },
+          { id: '5.2', text: 'A Política da Qualidade está estabelecida, comunicada, compreendida e aplicada na organização?', status: '', notes: '' },
+          { id: '5.3', text: 'As responsabilidades e autoridades para papéis relevantes estão atribuídas e comunicadas?', status: '', notes: '' }
+        ]
+      },
+      {
+        id: 'c6',
+        clause: '6',
+        title: 'Planeamento',
+        items: [
+          { id: '6.1', text: 'Foram determinadas as ações para tratar riscos e oportunidades de forma a assegurar que o SGQ atinge os resultados pretendidos?', status: '', notes: '' },
+          { id: '6.2', text: 'Os objetivos da qualidade estão estabelecidos em funções, níveis e processos relevantes, e são mensuráveis?', status: '', notes: '' },
+          { id: '6.3', text: 'As alterações ao SGQ são planeadas e implementadas de forma sistemática?', status: '', notes: '' }
+        ]
+      },
+      {
+        id: 'c7',
+        clause: '7',
+        title: 'Suporte',
+        items: [
+          { id: '7.1', text: 'A organização providencia os recursos necessários (pessoas, infraestrutura, ambiente de trabalho, recursos de monitorização)?', status: '', notes: '' },
+          { id: '7.2', text: 'A competência das pessoas que realizam trabalho que afeta o desempenho da qualidade é assegurada (educação, formação ou experiência)?', status: '', notes: '' },
+          { id: '7.3', text: 'As pessoas estão consciencializadas sobre a política da qualidade, objetivos e o seu contributo para a eficácia do SGQ?', status: '', notes: '' },
+          { id: '7.4', text: 'A comunicação interna e externa relevante para o SGQ está determinada?', status: '', notes: '' },
+          { id: '7.5', text: 'A informação documentada exigida pela norma e pela organização é adequadamente criada, atualizada e controlada?', status: '', notes: '' }
+        ]
+      },
+      {
+        id: 'c8',
+        clause: '8',
+        title: 'Operação',
+        items: [
+          { id: '8.1', text: 'A organização planeia, implementa e controla os processos necessários para satisfazer os requisitos de produtos e serviços?', status: '', notes: '' },
+          { id: '8.2', text: 'Os requisitos para produtos e serviços são determinados, revistos e a comunicação com o cliente é eficaz?', status: '', notes: '' },
+          { id: '8.3', text: 'Existe um processo estabelecido para o design e desenvolvimento de produtos/serviços (se aplicável)?', status: '', notes: '' },
+          { id: '8.4', text: 'Processos, produtos e serviços fornecidos externamente (fornecedores) são controlados e avaliados?', status: '', notes: '' },
+          { id: '8.5', text: 'A produção e a provisão do serviço são controladas debaixo de condições controladas (incluindo identificação e rastreabilidade)?', status: '', notes: '' },
+          { id: '8.6', text: 'A libertação de produtos e serviços só ocorre após a verificação de que os requisitos foram cumpridos?', status: '', notes: '' },
+          { id: '8.7', text: 'As saídas não conformes são identificadas, controladas e a ação tomada é documentada?', status: '', notes: '' }
+        ]
+      },
+      {
+        id: 'c9',
+        clause: '9',
+        title: 'Avaliação do Desempenho',
+        items: [
+          { id: '9.1', text: 'A organização monitoriza, mede, analisa e avalia o desempenho do SGQ e a satisfação do cliente?', status: '', notes: '' },
+          { id: '9.2', text: 'As auditorias internas são conduzidas a intervalos planeados de forma objetiva e imparcial?', status: '', notes: '' },
+          { id: '9.3', text: 'A gestão de topo revê o SGQ a intervalos planeados para assegurar a sua contínua adequação e eficácia (Revisão pela Gestão)?', status: '', notes: '' }
+        ]
+      },
+      {
+        id: 'c10',
+        clause: '10',
+        title: 'Melhoria',
+        items: [
+          { id: '10.1', text: 'A organização determina e seleciona oportunidades de melhoria para satisfazer os requisitos do cliente e aumentar a sua satisfação?', status: '', notes: '' },
+          { id: '10.2', text: 'Quando ocorre uma não conformidade (incluindo reclamações), a organização reage, avalia a necessidade de ações corretivas e retém evidências?', status: '', notes: '' },
+          { id: '10.3', text: 'A organização melhora continuamente a adequação, suficiência e eficácia do SGQ?', status: '', notes: '' }
+        ]
+      }
+    ];
+
+    function App() {
+      const [generalInfo, setGeneralInfo] = useState({
+        auditId: `AUD-${new Date().getFullYear()}-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`,
+        date: new Date().toISOString().split('T')[0],
+        auditor: '',
+        auditee: '',
+        department: '',
+        scope: '',
+        type: 'Interna',
+        previousAuditRef: ''
+      });
+
+      const [checklist, setChecklist] = useState(initialChecklist);
+      const [expandedSections, setExpandedSections] = useState({ c4: true });
+      const [strengths, setStrengths] = useState('');
+      const [pastAuditsFollowUp, setPastAuditsFollowUp] = useState('');
+
+      const [history, setHistory] = useState([]);
+      const [selectedHistoryId, setSelectedHistoryId] = useState('');
+
+      const handleInfoChange = (e) => {
+        const { name, value } = e.target;
+        setGeneralInfo(prev => ({ ...prev, [name]: value }));
+      };
+
+      const toggleSection = (id) => {
+        setExpandedSections(prev => ({ ...prev, [id]: !prev[id] }));
+      };
+
+      const updateItemStatus = (sectionId, itemId, status) => {
+        setChecklist(prevChecklist => 
+          prevChecklist.map(section => {
+            if (section.id === sectionId) {
+              return {
+                ...section,
+                items: section.items.map(item => 
+                  item.id === itemId ? { ...item, status } : item
+                )
+              };
+            }
+            return section;
+          })
+        );
+      };
+
+      const updateItemNotes = (sectionId, itemId, notes) => {
+        setChecklist(prevChecklist => 
+          prevChecklist.map(section => {
+            if (section.id === sectionId) {
+              return {
+                ...section,
+                items: section.items.map(item => 
+                  item.id === itemId ? { ...item, notes } : item
+                )
+              };
+            }
+            return section;
+          })
+        );
+      };
+
+      const handleNewAudit = () => {
+        if (window.confirm('Tem a certeza que deseja criar uma nova auditoria? Todos os dados atuais não guardados serão perdidos.')) {
+          setGeneralInfo({
+            auditId: `AUD-${new Date().getFullYear()}-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`,
+            date: new Date().toISOString().split('T')[0],
+            auditor: '',
+            auditee: '',
+            department: '',
+            scope: '',
+            type: 'Interna',
+            previousAuditRef: ''
+          });
+          
+          setChecklist(initialChecklist.map(section => ({
+            ...section,
+            items: section.items.map(item => ({ ...item, status: '', notes: '' }))
+          })));
+          
+          setStrengths('');
+          setPastAuditsFollowUp('');
+          setExpandedSections({ c4: true });
+          setSelectedHistoryId('');
+          
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      };
+
+      const handleSave = () => {
+        const exportData = {
+          generalInfo,
+          checklist,
+          strengths,
+          pastAuditsFollowUp,
+          savedAt: new Date().toISOString()
+        };
+
+        setHistory(prev => {
+          const existingIndex = prev.findIndex(a => a.generalInfo.auditId === generalInfo.auditId);
+          if (existingIndex >= 0) {
+            const newHistory = [...prev];
+            newHistory[existingIndex] = exportData;
+            return newHistory;
+          } else {
+            return [exportData, ...prev];
+          }
+        });
+        
+        setSelectedHistoryId(generalInfo.auditId);
+        alert("Auditoria gravada com sucesso e adicionada ao histórico!");
+      };
+
+      const handleLoadHistory = (e) => {
+        const id = e.target.value;
+        if (!id) return;
+
+        if (window.confirm('Carregar esta auditoria irá substituir os dados atuais no ecrã. Continuar?')) {
+          const savedAudit = history.find(a => a.generalInfo.auditId === id);
+          if (savedAudit) {
+            setGeneralInfo(savedAudit.generalInfo);
+            setChecklist(savedAudit.checklist);
+            setStrengths(savedAudit.strengths || '');
+            setPastAuditsFollowUp(savedAudit.pastAuditsFollowUp || '');
+            setSelectedHistoryId(id);
+          }
+        }
+      };
+
+      const handlePrint = () => {
+        window.print();
+      };
+
+      const stats = useMemo(() => {
+        let total = 0, c = 0, nc = 0, om = 0, na = 0, pendentes = 0;
+        checklist.forEach(section => {
+          section.items.forEach(item => {
+            total++;
+            if (item.status === 'C') c++;
+            else if (item.status === 'NC') nc++;
+            else if (item.status === 'OM') om++;
+            else if (item.status === 'NA') na++;
+            else pendentes++;
+          });
+        });
+        
+        const progresso = total > 0 ? Math.round(((total - pendentes) / total) * 100) : 0;
+        
+        return { total, c, nc, om, na, pendentes, progresso };
+      }, [checklist]);
+
+      return (
+        <div className="min-h-screen bg-slate-50 p-4 md:p-8 font-sans text-slate-800">
+          <div className="max-w-6xl mx-auto space-y-6">
+            
+            {/* Cabeçalho */}
+            <header className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col md:flex-row justify-between items-start md:items-center print:border-none print:shadow-none">
+              <div className="flex items-center gap-3 mb-4 md:mb-0">
+                <div className="bg-blue-600 p-3 rounded-lg w-12 h-12 flex items-center justify-center text-white">
+                  <IconClipboardCheck />
+                </div>
+                <div>
+                  <h1 className="text-2xl font-bold text-slate-900">Auditoria da Qualidade</h1>
+                  <p className="text-sm text-slate-500 font-medium">Norma de Referência: ISO 9001:2015</p>
+                </div>
+              </div>
+              
+              <div className="flex flex-wrap gap-3 w-full md:w-auto print:hidden">
+                {history.length > 0 && (
+                  <div className="flex-1 md:flex-none flex items-center gap-2 bg-white border border-slate-300 px-3 py-2 rounded-lg font-medium shadow-sm">
+                    <IconHistory />
+                    <select 
+                      value={selectedHistoryId}
+                      onChange={handleLoadHistory}
+                      className="bg-transparent border-none outline-none text-slate-700 cursor-pointer text-sm w-full md:w-auto"
+                    >
+                      <option value="" disabled>Histórico ({history.length})</option>
+                      {history.map(audit => (
+                        <option key={audit.generalInfo.auditId} value={audit.generalInfo.auditId}>
+                          {audit.generalInfo.auditId} ({audit.generalInfo.date})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+                <button 
+                  onClick={handleNewAudit}
+                  className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 px-4 py-2 rounded-lg font-medium transition-colors"
+                >
+                  <IconFilePlus />
+                  Nova Auditoria
+                </button>
+                <button 
+                  onClick={handleSave}
+                  className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                >
+                  <IconSave />
+                  Gravar
+                </button>
+                <button 
+                  onClick={handlePrint}
+                  className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-lg font-medium transition-colors"
+                >
+                  <IconPrinter />
+                  Imprimir
+                </button>
+              </div>
+            </header>
+
+            {/* Dashboard de Progresso (Escondido na impressão) */}
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 print:hidden">
+              <div className="flex flex-col md:flex-row gap-6 items-center">
+                <div className="w-full md:w-1/3">
+                  <div className="flex justify-between text-sm font-medium mb-2">
+                    <span className="text-slate-600">Progresso da Auditoria</span>
+                    <span className="text-blue-600">{stats.progresso}%</span>
+                  </div>
+                  <div className="w-full bg-slate-100 rounded-full h-2.5">
+                    <div 
+                      className="bg-blue-600 h-2.5 rounded-full transition-all duration-500" 
+                      style={{ width: `${stats.progresso}%` }}
+                    ></div>
+                  </div>
+                </div>
+                <div className="w-full md:w-2/3 grid grid-cols-2 md:grid-cols-5 gap-3 text-center">
+                  <div className="bg-slate-50 p-3 rounded-lg border border-slate-100">
+                    <div className="text-2xl font-bold text-slate-700">{stats.total}</div>
+                    <div className="text-xs font-medium text-slate-500 uppercase">Total</div>
+                  </div>
+                  <div className="bg-green-50 p-3 rounded-lg border border-green-100">
+                    <div className="text-2xl font-bold text-green-700">{stats.c}</div>
+                    <div className="text-xs font-medium text-green-600 uppercase">Conformes</div>
+                  </div>
+                  <div className="bg-red-50 p-3 rounded-lg border border-red-100">
+                    <div className="text-2xl font-bold text-red-700">{stats.nc}</div>
+                    <div className="text-xs font-medium text-red-600 uppercase">Não Conformes</div>
+                  </div>
+                  <div className="bg-amber-50 p-3 rounded-lg border border-amber-100">
+                    <div className="text-2xl font-bold text-amber-700">{stats.om}</div>
+                    <div className="text-xs font-medium text-amber-600 uppercase">Oportunidades</div>
+                  </div>
+                  <div className="bg-slate-100 p-3 rounded-lg border border-slate-200">
+                    <div className="text-2xl font-bold text-slate-500">{stats.pendentes}</div>
+                    <div className="text-xs font-medium text-slate-500 uppercase">Pendentes</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Informações Gerais */}
+            <section className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+              <div className="bg-slate-50 px-6 py-4 border-b border-slate-200">
+                <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                  <span className="text-blue-600"><IconInfo /></span>
+                  Informações Gerais da Auditoria
+                </h2>
+              </div>
+              <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="space-y-1">
+                  <label className="text-sm font-medium text-slate-600">N.º da Auditoria</label>
+                  <input 
+                    type="text" 
+                    name="auditId"
+                    value={generalInfo.auditId} 
+                    onChange={handleInfoChange}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    readOnly
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-sm font-medium text-slate-600">Data da Auditoria</label>
+                  <input 
+                    type="date" 
+                    name="date"
+                    value={generalInfo.date} 
+                    onChange={handleInfoChange}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-sm font-medium text-slate-600">Tipo de Auditoria</label>
+                  <select 
+                    name="type"
+                    value={generalInfo.type} 
+                    onChange={handleInfoChange}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  >
+                    <option value="Interna">Interna (1ª Parte)</option>
+                    <option value="Interna (2ª Parte)">Interna (2ª Parte)</option>
+                    <option value="Fornecedor">Fornecedor </option>
+                    <option value="Certificação">Certificação </option>
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-sm font-medium text-slate-600">Auditor Líder</label>
+                  <input 
+                    type="text" 
+                    name="auditor"
+                    value={generalInfo.auditor} 
+                    onChange={handleInfoChange}
+                    placeholder="Nome do Auditor"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-sm font-medium text-slate-600">Auditado(s)</label>
+                  <input 
+                    type="text" 
+                    name="auditee"
+                    value={generalInfo.auditee} 
+                    onChange={handleInfoChange}
+                    placeholder="Nomes ou Funções"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-sm font-medium text-slate-600">Ref. Auditoria Anterior</label>
+                  <input 
+                    type="text" 
+                    name="previousAuditRef"
+                    value={generalInfo.previousAuditRef} 
+                    onChange={handleInfoChange}
+                    placeholder="Nº da última auditoria..."
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-sm font-medium text-slate-600">Departamento / Área</label>
+                  <input 
+                    type="text" 
+                    name="department"
+                    value={generalInfo.department} 
+                    onChange={handleInfoChange}
+                    placeholder="Ex: Produção, RH, Compras"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  />
+                </div>
+                <div className="col-span-1 md:col-span-2 lg:col-span-3 space-y-1">
+                  <label className="text-sm font-medium text-slate-600">Âmbito da Auditoria</label>
+                  <textarea 
+                    name="scope"
+                    value={generalInfo.scope} 
+                    onChange={handleInfoChange}
+                    rows="2"
+                    placeholder="Descreva o processo ou área abrangida..."
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-y"
+                  ></textarea>
+                </div>
+              </div>
+            </section>
+
+            {/* Legenda */}
+            <div className="flex flex-wrap gap-4 text-sm bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+              <div className="font-semibold text-slate-700 mr-2">Legenda:</div>
+              <div className="flex items-center gap-1"><span className="w-4 h-4 rounded-full bg-green-500 inline-block"></span> C - Conforme</div>
+              <div className="flex items-center gap-1"><span className="w-4 h-4 rounded-full bg-red-500 inline-block"></span> NC - Não Conforme</div>
+              <div className="flex items-center gap-1"><span className="w-4 h-4 rounded-full bg-amber-500 inline-block"></span> OM - Oportunidade de Melhoria</div>
+              <div className="flex items-center gap-1"><span className="w-4 h-4 rounded-full bg-slate-400 inline-block"></span> NA - Não Aplicável</div>
+            </div>
+
+            {/* Lista de Verificação (Checklist) */}
+            <div className="space-y-4">
+              {checklist.map((section) => (
+                <div key={section.id} className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden print:border-b print:shadow-none print:break-inside-avoid">
+                  
+                  {/* Cabeçalho da Secção (Cláusula) */}
+                  <div 
+                    className="bg-slate-50 px-6 py-4 border-b border-slate-200 flex justify-between items-center cursor-pointer hover:bg-slate-100 transition-colors"
+                    onClick={() => toggleSection(section.id)}
+                  >
+                    <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                      <span className="bg-blue-600 text-white w-8 h-8 rounded-full flex items-center justify-center text-sm">
+                        {section.clause}
+                      </span>
+                      {section.title}
+                    </h2>
+                    <button className="text-slate-400 hover:text-slate-700 print:hidden">
+                      {expandedSections[section.id] ? <IconChevronUp /> : <IconChevronDown />}
+                    </button>
+                  </div>
+
+                  {/* Itens de Verificação */}
+                  {expandedSections[section.id] && (
+                    <div className="divide-y divide-slate-100">
+                      {section.items.map((item) => (
+                        <div key={item.id} className="p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 hover:bg-slate-50/50 transition-colors">
+                          
+                          {/* Questão */}
+                          <div className="lg:col-span-5 flex gap-3">
+                            <span className="font-semibold text-slate-500 min-w-[2.5rem] mt-0.5">{item.id}</span>
+                            <p className="text-slate-700">{item.text}</p>
+                          </div>
+
+                          {/* Botões de Estado */}
+                          <div className="lg:col-span-3 flex justify-start lg:justify-center items-start pt-1">
+                            <div className="flex gap-2 bg-slate-100 p-1 rounded-lg w-full max-w-xs justify-between">
+                              {['C', 'NC', 'OM', 'NA'].map((statusOption) => {
+                                let baseColor = "hover:bg-slate-200 text-slate-600";
+                                let activeColor = "";
+                                
+                                if (item.status === statusOption) {
+                                  if (statusOption === 'C') activeColor = "bg-green-500 text-white shadow-sm";
+                                  if (statusOption === 'NC') activeColor = "bg-red-500 text-white shadow-sm";
+                                  if (statusOption === 'OM') activeColor = "bg-amber-500 text-white shadow-sm";
+                                  if (statusOption === 'NA') activeColor = "bg-slate-600 text-white shadow-sm";
+                                }
+
+                                return (
+                                  <button
+                                    key={statusOption}
+                                    onClick={() => updateItemStatus(section.id, item.id, statusOption)}
+                                    className={`flex-1 py-1.5 px-2 text-sm font-bold rounded-md transition-all ${item.status === statusOption ? activeColor : baseColor}`}
+                                    title={
+                                      statusOption === 'C' ? 'Conforme' : 
+                                      statusOption === 'NC' ? 'Não Conforme' : 
+                                      statusOption === 'OM' ? 'Oportunidade de Melhoria' : 'Não Aplicável'
+                                    }
+                                  >
+                                    {statusOption}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+
+                          {/* Notas / Evidências */}
+                          <div className="lg:col-span-4">
+                            <textarea
+                              placeholder="Evidências objetivas, observações ou detalhes de NC/OM..."
+                              value={item.notes}
+                              onChange={(e) => updateItemNotes(section.id, item.id, e.target.value)}
+                              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none resize-y text-sm min-h-[5rem] ${
+                                item.status === 'NC' ? 'border-red-300 bg-red-50/30 focus:border-red-500' :
+                                item.status === 'OM' ? 'border-amber-300 bg-amber-50/30 focus:border-amber-500' :
+                                'border-slate-300 bg-white focus:border-blue-500'
+                              }`}
+                            />
+                          </div>
+
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Acompanhamento de Auditorias Passadas */}
+            <section className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mt-8 print:break-inside-avoid">
+              <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2 border-b pb-2">
+                <span className="text-blue-600"><IconHistory /></span>
+                Acompanhamento de Auditorias Anteriores
+              </h2>
+              <div>
+                <p className="text-sm text-slate-600 mb-3">
+                  Registo da verificação da implementação e eficácia das ações corretivas resultantes de não conformidades identificadas em auditorias anteriores (ISO 9001).
+                </p>
+                <textarea
+                  value={pastAuditsFollowUp}
+                  onChange={(e) => setPastAuditsFollowUp(e.target.value)}
+                  placeholder="Descreva o estado das ações corretivas pendentes, indique se foram fechadas eficazmente ou se requerem nova intervenção..."
+                  className="w-full border border-slate-300 rounded-lg p-3 min-h-[100px] outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                ></textarea>
+              </div>
+            </section>
+
+            {/* Resumo Final e Assinaturas */}
+            <section className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mt-8 print:break-inside-avoid">
+              <h2 className="text-lg font-bold text-slate-800 mb-6 border-b pb-2">Conclusão da Auditoria</h2>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+                <div>
+                  <p className="font-medium text-slate-700 mb-2">Pontos Fortes:</p>
+                  <textarea 
+                    value={strengths}
+                    onChange={(e) => setStrengths(e.target.value)}
+                    className="w-full border border-slate-300 rounded-lg p-3 min-h-[100px] outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  ></textarea>
+                </div>
+                <div>
+                  <p className="font-medium text-slate-700 mb-2">Sumário de Não Conformidades:</p>
+                  <textarea 
+                    className="w-full border border-slate-300 bg-slate-50 text-slate-600 rounded-lg p-3 min-h-[100px] outline-none" 
+                    value={
+                      checklist.flatMap(s => s.items)
+                        .filter(i => i.status === 'NC')
+                        .map(i => `${i.id}: ${i.notes || 'Sem descrição'}`)
+                        .join('\n')
+                    } 
+                    readOnly 
+                    placeholder="Preenchido automaticamente com base nas Não Conformidades (NC) marcadas acima..."
+                  ></textarea>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-12 pt-8">
+                <div className="text-center">
+                  <div className="border-b border-slate-400 h-10 w-full mb-2"></div>
+                  <p className="font-medium text-slate-700">{generalInfo.auditor || "Assinatura do Auditor"}</p>
+                  <p className="text-sm text-slate-500">Data: {generalInfo.date}</p>
+                </div>
+                <div className="text-center">
+                  <div className="border-b border-slate-400 h-10 w-full mb-2"></div>
+                  <p className="font-medium text-slate-700">{generalInfo.auditee || "Assinatura do Auditado"}</p>
+                  <p className="text-sm text-slate-500">Reconhecimento dos resultados</p>
+                </div>
+              </div>
+            </section>
+
+          </div>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
